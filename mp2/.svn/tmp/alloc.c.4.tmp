@@ -1,0 +1,245 @@
+/** @file alloc.c */
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#define ULONG_MAX 4294967295
+
+/* size of atom is 16 bytes */
+typedef struct atom
+{
+    size_t nunit;
+    struct atom *next;
+}atom;
+
+static atom *pos = NULL;
+static atom base;
+
+void printall()
+{
+/*	printf("	[printall] ++++++++++++++++++++++++++++++++++>\n");*/
+	pos = &base;
+	atom *itr = pos->next;
+	// printf("	[----] %p\n", itr);
+	// puts("");
+	size_t i = 0;
+	size_t tsize = 0;
+	printf("		[printchain] ");
+	while (itr != &base)
+	{
+/*		printf("	[printblock] units in block %lu\n", itr->nunit + 1);*/
+/*		for (i = 0; i < itr->nunit + 1; i++)*/
+/*		{*/
+/*			printf("	[printpool] %p\n", itr+ i);*/
+/*		}*/
+// 		printf("	[printpool] %p\n", itr);
+/*		printf("	[printlink] %p -> %p\n", itr, itr->next);*/
+/*		printf("	[printpool] i=%lu memory=%lu MB, %lu KB\n", i, itr->nunit*sizeof(atom)/1024/1024, itr->nunit*sizeof(atom)/1024);*/
+		tsize += itr->nunit;
+		printf("%p(%luMB, %lu KB) -> %p(%luMB, %lu KB) -> ", itr, itr->nunit*sizeof(atom)/1024/1024, itr->nunit*sizeof(atom)/1024, itr->next, itr->next->nunit*sizeof(atom)/1024/1024, itr->next->nunit*sizeof(atom)/1024);
+		itr = itr->next;
+		i++;
+	}
+	puts("");
+/* 	printf("	[printpool] block#=%lu total memory usage %lu MB, %lu KB\n", i, tsize*sizeof(atom)/1024/1024, tsize*sizeof(atom)/1024);*/
+/* 	printf("	[printall] <++++++++++++++++++++++++++++++++++\n");*/
+}
+
+void *calloc(size_t num, size_t size)
+{
+	/* Note: This function is complete. You do not need to modify it. */
+	void *ptr = malloc(num * size);
+	
+	if (ptr)
+		memset(ptr, 0x00, num * size);
+
+	return ptr;
+}
+
+/* (size) -> pointer to the first unit, which contains metadata
+size number of bytes 
+next to NULL */
+atom *reqst(size_t bsize, size_t unit, size_t n)
+{
+	atom * p;
+	p = (atom *)sbrk(bsize + unit); /* one extra unit for metadata */
+/*	if (p == (void *)-1) perror("reqst fail");*/
+	/* in the first unit, setup metadata */
+	p->nunit = n;
+/*	printf("	[reqst] %lu+1 atoms from %p to %p\n", n, p, p+n);*/
+	return p;
+}
+
+void *malloc(size_t size)
+{
+/*	printf("	[malloc]\n");*/
+	if (size == 0) return NULL;
+	/* initialize base and pos */
+	if (pos == NULL) 
+	{
+		pos = base.next = &base;
+		base.nunit = 0;
+	}
+	atom *ret;
+	atom *itr;
+	atom *prev;
+	size_t unit = sizeof(atom);
+	size_t n = (size - 1) / unit + 1; /* num of units required by user */
+	size_t bsize = n * unit; /* bytes will be used by user */
+
+	/* if base has been initialized, search for the best fit */
+	/* a pointer to the best blosk */
+	/* waste = have - require is the matric */
+	pos = base.next;
+	atom *bestb = &base;
+	atom *bprev = &base;
+	size_t mwst = ULONG_MAX;
+	size_t wst = 0;
+	
+/*	printf("	[malloc] break at %p\n", pos);*/
+	/* if no enough space to return to user, 
+		request memory from sys and return */
+	/* if no space has been sbrked for malloc, request memory from sys */
+	if (mwst == ULONG_MAX)
+	{
+/*		printf("	[malloc] ->reqst bsize=%lu MB \n", bsize/1024/1024);*/
+		ret = reqst(bsize, unit, n);
+		if (ret == NULL) return NULL;
+		ret++;
+/*		printf("	[malloc] <-reqst return pointer at %p\n", ret);*/
+/*		printall();*/
+		return (void *)ret;
+	}
+	/* if enough space found, 
+			size equals, return this block, 
+			bigger than required, partition the later part of the block, reset metadata, and return the later part to user */
+	if (mwst > 0) 
+	{
+		bestb->nunit = bestb->nunit - n - 1;
+		itr = bestb + bestb->nunit + 1;
+		itr->nunit = n;
+		itr->next = NULL;
+		ret = itr + 1;
+/*		printf("[malloc] return %lu to user from pool ptr = %p cur pos unit=%lu\n", n, ret, pos->nunit);*/
+/*		printall();*/
+		return (void *)ret;
+	}
+	if (mwst == 0)
+	{
+		ret = bestb + 1;
+		bprev->next = bestb->next;
+/*		printf("[malloc] return to user from pool block equlas need\n");*/
+/*		printall();*/
+		return (void *)ret;
+	}
+	return NULL;
+}
+
+/* ptr points right after header */
+void free(void *ptr)
+{
+/*	printf("	[free]\n");*/
+	// "If a null pointer is passed as argument, no action occurs."
+	if (ptr == NULL)
+		return;
+		
+	/* locator: (ptr, pos, base) -> prev block */
+	pos = &base;
+	atom *next = pos->next;
+	atom *mptr = (atom *)ptr;
+/*	printf("	[free]\n");*/
+	while (next != &base)
+	{
+		/* if ptr is between two blocks */
+		/* if ptr is very first */
+		/* if ptr is very last */
+		if (
+			(mptr > pos && mptr < next) ||
+			(mptr < pos && mptr < next && next < pos) ||
+			(mptr > pos && mptr > next && next < pos)		
+		)
+		{
+			break;
+		}
+		pos = next;
+		next = pos->next;
+	}
+	/* connector & merger: connect returned block from user */
+	atom *big = pos;
+	atom *mid = pos->next = mptr - 1;
+	atom *end = pos->next->next = next;
+/*	printf("		[free] %p -> %p -> %p\n", big, mid, end);*/
+	/* merger: (big) -> void */
+	/* right */
+/*	printf("	[detect] %p + 1 + %lu == %p\n", mid, mid->nunit, end);*/
+	if (mid + 1 + mid->nunit == end && end != &base)
+	{ 
+		mid->nunit = mid->nunit + 1 + end->nunit;
+		mid->next = end->next; 
+		end = mid->next;
+/*		printf("		[free] right merger\n");*/
+	}
+	/* left */
+/*	printf("	[detect] %p + 1 + %lu == %p\n", big, big->nunit, mid);*/
+	if (big + 1 + big->nunit == mid && big != &base)
+	{ 
+		big->nunit = big->nunit + 1 + mid->nunit;
+		big->next = mid->next; 
+/*		printf("		[free] left merger\n");*/
+	} 
+
+/*	printall();*/
+}
+
+
+void *realloc(void *ptr, size_t size)
+{
+/*	printf("	[realloc]\n");*/
+	/* if ptr is NULL, malloc size bytes for user */
+	if (ptr == NULL) 
+		return malloc(size);
+	/* if ptr not NULL and size is 0, free block and return NULL*/
+	if (size == 0) 
+	{
+		free(ptr); 
+		return NULL; 
+/*		printf("	return from [realloc]\n");*/
+	}
+	
+	atom *oatm = (atom *)ptr - 1;
+	size_t nunit = (size - 1) / sizeof(atom) + 1;
+	/* if size is similar, don't change */
+	if (oatm->nunit == nunit)
+	{
+/*		printf("		[realloc] exact: ptr %p %lu MB\n", oatm, oatm->nunit*sizeof(atom)/1024/1024);*/
+		return ptr;
+	}
+	/* if size is smaller, shrink */
+	if (oatm->nunit > nunit)
+	{
+/*		printall();*/
+		atom *tofr = oatm + 1 + nunit;
+		tofr->nunit = oatm->nunit - nunit - 1;
+		oatm->nunit = nunit;
+/*		printf("		[realloc] left to user: ptr %p %lu MB \n", oatm, oatm->nunit*sizeof(atom)/1024/1024);*/
+		tofr++;
+/*		printf("		[realloc] ->\n");*/
+		free(tofr);
+/*		printf("		[realloc] <-\n");*/
+		return ptr;
+	}
+/*	printf("	[realloc] malloc %lu < %lu\n", oatm->nunit, nunit);*/
+	/* if size is bigger, malloc new */
+	void *nptr = malloc(size);
+/*	printf("[realloc] memcpy size=%lu\n", sm);*/
+	
+	/* #if size is bigger, extend user block */
+	/* #if size is bigger, malloc block, and free current */
+	memcpy(nptr, ptr, oatm->nunit * sizeof(atom));
+  	free(ptr);
+/*  	printf("[realloc] <--------------------------------\n");*/
+	return nptr;
+}
+
+

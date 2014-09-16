@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef PART2
+  #define NUM_CYCLES 5
+#else
+  #define NUM_CYCLES 5
+#endif
+
+int main()
+{
+  int i;
+  for (i = 0; i < NUM_CYCLES; i++) {
+    printf("<main> %d malloc %d*sizeof(%lu)\n", i, i, sizeof(int));
+    int *ptr = malloc((5+i)*sizeof(int));
+    if (ptr == NULL)
+    {
+      printf("Memory failed to allocate!\n");
+      return 1;
+    }
+
+    *ptr = 4;
+    free(ptr);
+  }
+
+	printf("Memory was allocated, used, and freed!\n");	
+	return 0;
+}

@@ -1,0 +1,31 @@
+#ifndef _TRIE_H
+#define _TRIE_H
+
+#include "../lab0/libqueue.h"
+
+
+typedef struct trieNode{
+	char *key;
+	int count;
+	struct trieNode *child;
+	struct trieNode *next;
+}trieNode_t;
+
+typedef struct trie{
+	trieNode_t *root;
+} trie_t;
+
+trieNode_t *trieNode_new(char *c); /*create a new node*/ 
+void trie_init(trie_t *t);
+trieNode_t *trieNode_list(const char *str); /*create a list of nodes*/
+trieNode_t *trie_levelMatch(trieNode_t *t, char *c); /*given a non-null char, compare all non-null nodes at this level, return pointer to the match or NULL*/
+void trie_destroy(trie_t *t);
+
+void trie_add(trie_t *t, const char *str);
+int trie_freq_count(trie_t *t, const char *prefix);
+queue_t *trie_all_matches(trie_t *t, const char *prefix);
+char *trie_most_freq_match(trie_t *t, const char *prefix);
+char *trie_longest_prefix(trie_t *t, const char *str);
+void trie_print(trie_t *t);
+
+#endif

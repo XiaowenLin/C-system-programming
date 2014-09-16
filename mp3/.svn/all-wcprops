@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/su14-cs241/!svn/ver/6428/xlin11/mp3
+END
+setup.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/setup.py
+END
+build.sh
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/build.sh
+END
+autograde.txt
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/su14-cs241/!svn/ver/6405/xlin11/mp3/autograde.txt
+END
+register.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/register.h
+END
+parsort.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/su14-cs241/!svn/ver/7192/xlin11/mp3/parsort.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/su14-cs241/!svn/ver/7096/xlin11/mp3/Makefile
+END
+scheduler.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/su14-cs241/!svn/ver/6267/xlin11/mp3/scheduler.c
+END
+parsort.h
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/parsort.h
+END
+parsort_module.c
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/su14-cs241/!svn/ver/7192/xlin11/mp3/parsort_module.c
+END
+scheduler.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/scheduler.h
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/su14-cs241/!svn/ver/7192/xlin11/mp3/main.c
+END
+register.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/su14-cs241/!svn/ver/6104/xlin11/mp3/register.c
+END
+test.py
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/su14-cs241/!svn/ver/7192/xlin11/mp3/test.py
+END

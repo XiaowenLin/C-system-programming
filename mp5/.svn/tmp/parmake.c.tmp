@@ -1,0 +1,334 @@
+/** @file parmake.c */
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <time.h>
+#include "rule.h"
+#include "queue.h"
+#include "parser.h"
+
+/* rule pointer */
+queue_t *head;
+
+<<<<<<< .mine
+/* mutex */
+pthread_mutex_t mkmutex;
+
+/* conditional var */
+pthread_cond_t mklmtcv;
+
+=======
+/* mutex */
+pthread_mutex_t makemutex;
+
+/* cv */
+pthread_cond_t makecv;
+int num_running;
+int num_threads;
+int num_rules;
+
+>>>>>>> .r9370
+/* search a target in a queue */
+rule_t *queue_search(char *target){
+    unsigned int size = queue_size(head);
+    rule_t *rule;
+    int i;
+    for (i = 0; i < size; i++){
+        rule = queue_at(head, i);
+        if (strcmp(rule->target, target) == 0){
+            //printf("queue contains %s which equals %s\n", rule->target, target);
+	        break;	
+    	}
+    }
+    if (i == size) return NULL;
+    return rule;    
+}
+
+time_t mod_time(const char *path){
+    struct stat statbuf;
+    if (stat(path, &statbuf) == -1){
+        perror(path);
+        exit(1);
+    }
+    return statbuf.st_mtime;
+}
+/* put target into a rule */
+void parsed_new_target(char *target){
+    rule_t *new_rule = malloc(sizeof(rule_t));
+    /* deps */
+    new_rule->deps = malloc(sizeof(queue_t));
+    queue_init(new_rule->deps);
+    /* cmds */
+    new_rule->commands = malloc(sizeof(queue_t));
+    queue_init(new_rule->commands);
+
+    queue_enqueue(head, new_rule);
+    new_rule->target = malloc(sizeof(target) + sizeof(char));
+    strcpy(new_rule->target, target);
+    //printf("target is %s\n", new_rule->target);
+}
+
+/* put a dependency into a rule */
+void parsed_new_dependency(char *target, char *dependency){
+    rule_t *rule = queue_search(target);
+    char *dep = malloc(sizeof(dependency) + sizeof(char));
+    strcpy(dep, dependency);
+    queue_enqueue(rule->deps, dep);
+}
+
+/* put a command into a rule */
+void parsed_new_command(char *target, char *command){
+    rule_t *rule = queue_search(target);
+    char *cmd = malloc(sizeof(command) + sizeof(char));
+    strcpy(cmd, command);
+    queue_enqueue(rule->commands, cmd);
+}
+
+int is_rule(char *dep){
+    rule_t *rule = NULL;
+    rule = queue_search(dep);
+    if (rule == NULL) return 0;
+    else return 1;
+}
+
+/* deps_in_rule */
+void deps_in_rule(rule_t *rule, queue_t *deps){
+    queue_t *deps_ptr = rule->deps;
+
+    int i;
+    char *dep;
+    for (i = 0; i < queue_size(deps_ptr); i++){
+        dep = queue_at(deps_ptr, i);
+        if (is_rule(dep)){
+            printf("%s is rule\n", dep);
+            queue_enqueue(deps, dep);
+        }
+    }
+    return;
+}
+
+int rule_outdated(rule_t *rule){
+    //puts("[outdated test]");
+    time_t target_time = mod_time(rule->target);
+    queue_t *dep = rule->deps;
+    int i, ret = 0;
+    char *dep_file;
+    time_t dep_time;
+    for (i = 0; i < queue_size(dep); i++){
+        dep_file = queue_at(dep, i);
+        dep_time = mod_time(dep_file);
+        if (difftime(dep_time, target_time) > 0){
+            ret = 1;
+            break;
+        }
+    }
+    return ret;
+}
+void make_deps(queue_t *deps);
+
+void run_cmd(queue_t *cmds){
+    int i;
+    char *cmd;
+    for (i = 0; i < queue_size(cmds); i++){
+        cmd = queue_at(cmds, i);
+        system(cmd);
+    }
+}
+/* make */
+void make_helper(void *t){
+    /* block all others */
+    pthread_mutex_lock(&makemutex);
+    printf("thread %d get lock\n", gettid());
+    /* aquire a target to make */
+    rule_t *rule = queue_at(head, num_running);
+    printf("thread %d get rule at %d and update num_running to %d \n", gettid(), num_running, num_running + 1);
+    num_running++;
+    /* wait until runnable */
+    queue_t deps;
+    queue_init(&deps);
+    deps_in_rule(rule, &deps);
+    while (){
+        
+        printf("rule runnable\n");
+    }
+    if (queue_size(&deps) != 0){
+        printf("queue_size %d\n", queue_size(&deps));
+        make_deps(&deps);
+    }
+    int exist = access(target, R_OK);
+    if (exist != 0 || rule_outdated(rule)){
+         printf("%s\n", target);
+         run_cmd(rule->commands);
+    }else{
+        puts("[ready]");
+    }
+    /* release mutex */
+    pthread_mutex_unlock(&makemutex);
+    queue_destroy(&deps);
+}
+
+void make_deps(queue_t *deps){
+    int i;
+    char *dep;
+    for (i = 0; i < queue_size(deps); i++){
+        dep = queue_at(deps, i);
+        make_helper(dep);
+    }
+    return;
+}
+
+void parser_result(){
+    printf("size of rules is %d\n", queue_size(head));
+    int i;
+    rule_t *rule;
+    for (i = 0; i < queue_size(head); i++){
+        rule = queue_at(head, i);
+        printf("%s\n", rule->target);
+        int j;
+        for (j = 0; j < queue_size(rule->deps); j++){
+            printf("    deps:");
+            puts((char *)queue_at(rule->deps, j));
+        }
+        for (j = 0; j < queue_size(rule->commands); j++){
+            printf("    cmds:");
+            puts((char *)queue_at(rule->commands, j));
+        }
+    }
+}
+
+
+/**
+ * E`:ntry point to parmake.
+ */
+int main(int argc, char **argv)
+{
+    
+	/* get opt */ 
+    extern int optind;
+    extern char *optarg;
+    int c;
+    int err = 0;
+    int fflag = 0, jflag = 0;
+    char *f = NULL, *j = NULL;
+    int num_j;
+    while ((c = getopt(argc, argv, "f:j:")) != -1){
+        switch(c){
+            case 'f':
+                fflag = 1;
+                f = optarg;
+                break;
+            case 'j':
+                jflag = 1;
+                j = optarg;
+                break;
+            case '?':
+                err = 1;
+                break;
+        }
+    }
+
+    /* handle makefile */
+    int accessible;
+    if (f == NULL) {
+        if ((accessible = access("./makefile", F_OK)) == 0) {
+            f = "./makefile";
+        }
+        else if ((accessible = access("./Makefile", F_OK)) == 0) {
+            f = "./Makefile";
+        }
+        else return 1;
+    }
+    printf("f is %s\n", f);
+
+    /* handle j */
+    if (j == NULL) num_j = 1;
+    else num_j = atoi(j);
+    printf("j is %d\n", num_j);
+
+    /* array of targets */
+    int target_size = argc - optind;
+    int old_optind = optind;
+    char *run_targets[target_size + 1];
+    if (optind < argc){
+        for (; optind < argc; optind++){
+            run_targets[optind - old_optind] = argv[optind];
+            puts(run_targets[optind - old_optind]);
+        }
+    }
+    run_targets[target_size] = NULL;
+
+    /* a queue of rules */
+    queue_t rules;
+    queue_init(&rules);
+    head = &rules;
+
+    /* parse */
+    parser_parse_makefile(f, run_targets, 
+	parsed_new_target, 
+	parsed_new_dependency, 
+	parsed_new_command);
+<<<<<<< .mine
+    parser_result();
+    /* make all in one thread */
+    /*int i;
+    rule_t *tmp;
+    for (i = 0; i < queue_size(&rules); i++){
+        tmp = (rule_t *)queue_at(&rules, i);
+        printf("target: %s\n", tmp->target);
+        make_helper(tmp->target);
+    }*/
+    /* multi threading make */
+    /*   create j worker threads and wait*/
+    pthread_mutex_init(&mkmutex, NULL);
+    pthread_cond_init(&mklmtcv, NULL);
+    
+    pthread_t threads[j];
+    int th_i;
+    for (th_i = 0; th_i < j; th_i++){
+        /* struct arg */
+        pthread_create(&threads[th_i], NULL, thread_make, (void *)arg);
+=======
+    parser_result();
+    /* make */
+    /*int i;
+    rule_t *tmp;
+    for (i = 0; i < queue_size(&rules); i++){
+        tmp = (rule_t *)queue_at(&rules, i);
+        puts(tmp->target);
+        make_helper(tmp->target);
+    }*/
+    pthread_mutex_init(&makemutex, NULL);
+    pthread_cond_init(&makecv, NULL);
+    
+    pthread_t threads[j]
+    num_rules = queue_size(head);
+    /* if more threads than num of rules, put some of them to work and the
+     * rest to sleep */
+    void *t = NULL;
+    int th_id;
+    int lmt;
+    num_running = 0;
+    num_threads = j;
+    for (th_id = 0; th_id < num_threads; th_id++){
+        pthread_create(&threads[th_id], NULL, make_helper, t);
+
+    int c;
+    for (c = 0; c < j; c++){
+        pthread_join(threads[j], NULL);
+>>>>>>> .r9370
+    }
+<<<<<<< .mine
+    /*   distribute rules among the threads and run */
+    /*   wait until all finish */
+=======
+    pthread_mutex_destroy(&makemutex);
+    pthread_cond_destroy(&makecv);
+>>>>>>> .r9370
+    /* free each rule */
+    queue_destroy(&rules);
+    return 0;
+}

@@ -1,0 +1,106 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "libtrie.h"
+#include "../lab0/libqueue.h"
+
+trieNode_t *trieNode_new(char *c)
+{
+	trieNode_t *node;
+	node = (trieNode_t *) malloc(sizeof(trieNode_t));
+	node->key = c;
+	node->count = 0;
+	node->child = NULL;
+	node->next = NULL;
+	return node;
+	
+};
+
+void trie_init(trie_t *t)
+{
+	char *c = (char *) malloc(sizeof(char));
+	*c = '\0';
+	t->root = trieNode_new(c);
+}
+
+trieNode_t *trie_levelMatch(trieNode_t *t, char *c)
+{
+	if (t == NULL) return NULL;
+	else 
+	{
+		if (*t->key == *c) return t;
+		else return trie_levelMatch(t->next, c);
+	}	
+} 
+
+void trie_destroy(trie_t *t)
+{
+	
+}
+
+trieNode_t *trieNode_list(const char *str) /*create a list of nodes*/
+{
+	trieNode_t *t;
+	trieNode_t *h;
+	trieNode_t *node;
+	int i = 0;
+	while (str[i] != '\0')
+	{
+		char *tmp = malloc(sizeof(char));
+		*tmp = str[i];
+		node = trieNode_new(tmp);
+		if (i = 0) 
+		{
+			h = t = node;
+		}
+		else
+		{
+			t->child = node;
+			t = node;
+		}
+	}
+	node = trieNode_new(sizeof(char));
+	node = trieNode_new('\0');
+	t->child = node;
+	t = node;
+	return h;
+}
+
+void trie_add(trie_t *t, const char *str)
+{
+	/*if empty trie, add a list of str*/
+	if (t->root->child == NULL) t->root = trieNode_list(str);
+	/*if non-empty, compare first level with first in str*/
+	/*if find a match, neight of the next level is \0, compare next level*/
+	/*if find a match, next str is not \0, next node is \0, add a list to this node*/
+	/*if find a match, next str is \0, next node is not \0, change count of this key*/
+	/*if find a match, both next level are \0, change count of this key*/
+	/*if find no match, add new node at the end of level, add new list to it*/
+}
+
+
+int trie_freq_count(trie_t *t, const char *prefix)
+{
+	return 0;
+}
+
+queue_t *trie_all_matches(trie_t *t, const char *prefix)
+{
+	return NULL;
+}
+
+char *trie_most_freq_match(trie_t *t, const char *prefix)
+{
+	return NULL;
+}
+
+char *trie_longest_prefix(trie_t *t, const char *str)
+{
+	return NULL;
+}
+
+void trie_print(trie_t *t)
+{
+  
+}

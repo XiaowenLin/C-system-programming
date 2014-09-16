@@ -1,0 +1,106 @@
+Test dog, case 1: PASSED 1/1
+Test dog, case 2: PASSED 2/2
+Test dog, case 3: PASSED 2/2
+Test dog, case 4: PASSED 2/2
+Test findstr, case 1: PASSED 1/1
+Test findstr, case 2: PASSED 1/1
+Test findstr, case 3: PASSED 1/1
+Test findstr, case4: PASSED 2/2
+Test findstr, case 5: PASSED 2/2
+Test findstr, case 6: PASSED 3/3
+Test findstr, case 7: PASSED 3/3
+Test findstr, case 8: PASSED 1/1
+Test findstr, case 9: FAILED 0/3
+Test findstr, case 10: PASSED 2/2
+Test findstr, case 11: PASSED 3/3
+Test twirl, case 1: PASSED 2/2
+Test twirl, case 2: PASSED 2/2
+Test twirl, case 3: PASSED 2/2
+Test twirl, case 4: PASSED 2/2
+Test twirl, case 5: PASSED 3/3
+==29354== Memcheck, a memory error detector
+==29354== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==29354== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==29354== Command: ./dog hello_world.txt
+==29354== Parent PID: 29353
+==29354== 
+==29354== 
+==29354== HEAP SUMMARY:
+==29354==     in use at exit: 568 bytes in 1 blocks
+==29354==   total heap usage: 1 allocs, 0 frees, 568 bytes allocated
+==29354== 
+==29354== 568 bytes in 1 blocks are still reachable in loss record 1 of 1
+==29354==    at 0x4A069EE: malloc (vg_replace_malloc.c:270)
+==29354==    by 0x345C0671CA: __fopen_internal (in /lib64/libc-2.12.so)
+==29354==    by 0x400673: main (dog.c:28)
+==29354== 
+==29354== LEAK SUMMARY:
+==29354==    definitely lost: 0 bytes in 0 blocks
+==29354==    indirectly lost: 0 bytes in 0 blocks
+==29354==      possibly lost: 0 bytes in 0 blocks
+==29354==    still reachable: 568 bytes in 1 blocks
+==29354==         suppressed: 0 bytes in 0 blocks
+==29354== 
+==29354== For counts of detected and suppressed errors, rerun with: -v
+==29354== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 6 from 6)
+==29489== Memcheck, a memory error detector
+==29489== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==29489== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==29489== Command: ./twirl hello.txt
+==29489== Parent PID: 29488
+==29489== 
+==29489== Invalid write of size 1
+==29489==    at 0x4A07FBF: strcpy (mc_replace_strmem.c:442)
+==29489==    by 0x4008EE: toarray (twirl.c:32)
+==29489==    by 0x400DEC: main (twirl.c:184)
+==29489==  Address 0x4c3e3c6 is 0 bytes after a block of size 6 alloc'd
+==29489==    at 0x4A069EE: malloc (vg_replace_malloc.c:270)
+==29489==    by 0x4008C9: toarray (twirl.c:31)
+==29489==    by 0x400DEC: main (twirl.c:184)
+==29489== 
+==29489== Invalid read of size 1
+==29489==    at 0x4A07F64: strlen (mc_replace_strmem.c:403)
+==29489==    by 0x40096F: mlen (twirl.c:48)
+==29489==    by 0x400C02: putAll (twirl.c:118)
+==29489==    by 0x400E0E: main (twirl.c:186)
+==29489==  Address 0x4c3e3c6 is 0 bytes after a block of size 6 alloc'd
+==29489==    at 0x4A069EE: malloc (vg_replace_malloc.c:270)
+==29489==    by 0x4008C9: toarray (twirl.c:31)
+==29489==    by 0x400DEC: main (twirl.c:184)
+==29489== 
+==29489== Invalid read of size 1
+==29489==    at 0x4A07F64: strlen (mc_replace_strmem.c:403)
+==29489==    by 0x4009B6: trunck (twirl.c:58)
+==29489==    by 0x400A34: clnarr (twirl.c:73)
+==29489==    by 0x400C1C: putAll (twirl.c:123)
+==29489==    by 0x400E0E: main (twirl.c:186)
+==29489==  Address 0x4c3e3c6 is 0 bytes after a block of size 6 alloc'd
+==29489==    at 0x4A069EE: malloc (vg_replace_malloc.c:270)
+==29489==    by 0x4008C9: toarray (twirl.c:31)
+==29489==    by 0x400DEC: main (twirl.c:184)
+==29489== 
+==29489== Invalid read of size 1
+==29489==    at 0x4A07F64: strlen (mc_replace_strmem.c:403)
+==29489==    by 0x400A4F: clnarr (twirl.c:75)
+==29489==    by 0x400C1C: putAll (twirl.c:123)
+==29489==    by 0x400E0E: main (twirl.c:186)
+==29489==  Address 0x4c3e3c6 is 0 bytes after a block of size 6 alloc'd
+==29489==    at 0x4A069EE: malloc (vg_replace_malloc.c:270)
+==29489==    by 0x4008C9: toarray (twirl.c:31)
+==29489==    by 0x400DEC: main (twirl.c:184)
+==29489== 
+==29489== 
+==29489== HEAP SUMMARY:
+==29489==     in use at exit: 0 bytes in 0 blocks
+==29489==   total heap usage: 4 allocs, 4 frees, 33,462 bytes allocated
+==29489== 
+==29489== All heap blocks were freed -- no leaks are possible
+==29489== 
+==29489== For counts of detected and suppressed errors, rerun with: -v
+==29489== ERROR SUMMARY: 4 errors from 4 contexts (suppressed: 6 from 6)
+Program execution score: 37/40 
+
+Program heap freed: FAILED
+Correct memory usage: FAILED
+
+Tue Jul 1 02:32:35 CDT 2014
